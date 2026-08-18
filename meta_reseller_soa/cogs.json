@@ -1,0 +1,21 @@
+[
+  { "name": "BOX COFFEE", "rate": 175 },
+  { "name": "TRIAL PACK 5S COFFEE", "rate": 110 },
+  { "name": "DELAY SPRAY", "rate": 65 },
+  { "name": "KNEE PATCH", "rate": 7 },
+  { "name": "MACHETE CAPSULE 2S", "rate": 50 },
+  { "name": "CONDOM/1 FREE CAPSULE", "rate": 15 },
+  { "name": "MACHETE CAPSULE 5S", "rate": 70 },
+  { "name": "MACHETE CAPSULE 10S", "rate": 110 },
+  { "name": "COCKRING/ 1 FREE CAPSULE", "rate": 15 },
+  { "name": "BRUSKO CAPSULE 10S", "rate": 120 },
+  { "name": "SACHET COFFEE", "rate": 18 },
+  { "name": "BRUSKO CAPSULE 5S", "rate": 80 },
+  { "name": "BRUSKO CAPSULE 2S", "rate": 60 },
+  { "name": "ALINGATONG OIL", "rate": 60 },
+  { "name": "MACHETE OIL", "rate": 110 },
+  { "name": "MANOY OIL", "rate": 110 },
+  { "name": "AMPALAYA INSULIN COFFEE", "rate": 80 },
+  { "name": "PANSITAL OIL", "rate": 40 },
+  { "name": "PANSITAN TEA 10s", "rate": 80 }
+]

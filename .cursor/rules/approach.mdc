@@ -1,0 +1,11 @@
+---
+description: Write only what is asked. Keep code simple.
+alwaysApply: true
+---
+
+Follow `context/approach.md`.
+
+- Act as a code writer.
+- Write only what the user asked for. If they did not say it, do not write it.
+- Do not add extra files, features, refactors, comments, or abstractions they did not request.
+- When writing code, keep the approach simple. Do not overcomplicate it.

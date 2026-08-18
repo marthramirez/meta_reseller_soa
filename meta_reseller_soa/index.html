@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meta reseller — Item Name COGS</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Item Name COGS splitter</h1>
+      <p class="lede">
+        Paste one Item Name. After trim, pack/pouch counts (1 PACK, 3 POUCH) are
+        dropped — they are not COGS qty. Then products are split on +, WITH, W/,
+        and comma and matched to <code>cogs.json</code>. Serve this folder locally
+        so the JSON can load.
+      </p>
+
+      <label for="item-name">Item Name</label>
+      <textarea id="item-name" spellcheck="false">ME-MCTCAPS10 W/ FREE 7PATCHES</textarea>
+
+      <div class="actions">
+        <button class="primary" type="button" id="run">Compute COGS</button>
+        <button class="ghost" type="button" id="sample-offer">Offer sample</button>
+      </div>
+
+      <p class="status" id="status">Loading cogs.json…</p>
+      <div id="result"></div>
+    </main>
+
+    <script src="separator.js"></script>
+    <script>
+      const itemInput = document.getElementById("item-name");
+      const statusEl = document.getElementById("status");
+      const resultEl = document.getElementById("result");
+      let catalog = [];
+
+      function peso(n) {
+        return "₱" + Number(n).toLocaleString("en-PH", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+
+      function render(result) {
+        if (!result.lines.length) {
+          resultEl.innerHTML = '<p class="empty">Nothing to split after trim.</p>';
+          return;
+        }
+
+        const rows = result.lines
+          .map((line) => {
+            const cls = line.matched ? "" : " unmatched";
+            const name = line.cogsName ?? "unmatched";
+            return `<tr class="${cls}">
+              <td><span class="role ${line.role}">${line.role}</span></td>
+              <td>${line.segment}</td>
+              <td>${name}</td>
+              <td class="num">${line.qty}</td>
+              <td class="num">${line.matched ? peso(line.rate) : "—"}</td>
+              <td class="num">${line.matched ? peso(line.lineCogs) : "—"}</td>
+            </tr>`;
+          })
+          .join("");
+
+        resultEl.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Segment</th>
+                <th>COGS item</th>
+                <th>Qty</th>
+                <th>Rate</th>
+                <th>Line</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div class="total">
+            <span>Total COGS</span>
+            <strong>${peso(result.total)}</strong>
+          </div>`;
+      }
+
+      function run() {
+        const result = window.MetaCogs.computeCogs(itemInput.value, catalog);
+        const missed = result.lines.filter((line) => !line.matched).length;
+        statusEl.className = "status";
+        statusEl.textContent = missed
+          ? `${result.lines.length} product(s), ${missed} unmatched.`
+          : `${result.lines.length} product(s) matched.`;
+        render(result);
+      }
+
+      document.getElementById("run").addEventListener("click", run);
+      document.getElementById("sample-offer").addEventListener("click", () => {
+        itemInput.value = "1 PACK MACHETE CAPSULE 10S + FREE 7 KNEE PATCH";
+        run();
+      });
+      itemInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) run();
+      });
+
+      fetch("cogs.json")
+        .then((res) => {
+          if (!res.ok) throw new Error("Could not read cogs.json");
+          return res.json();
+        })
+        .then((rows) => {
+          catalog = rows;
+          statusEl.textContent = `${rows.length} COGS items loaded.`;
+          run();
+        })
+        .catch((err) => {
+          statusEl.className = "status error";
+          statusEl.textContent = err.message + " — serve this folder locally.";
+        });
+    </script>
+  </body>
+</html>
