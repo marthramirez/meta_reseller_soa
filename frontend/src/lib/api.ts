@@ -5,9 +5,20 @@ export type HealthResponse = {
   app: string
 }
 
+export type SoaStoreTotals = {
+  store_name: string
+  net_remittance: number
+  total_cogs: number
+  total_dsFee: number
+}
+
 export type ComputeSoaResponse = {
   status: string
   soa_id: number
+  net_remittance: number
+  total_cogs: number
+  total_dsFee: number
+  stores: Record<string, SoaStoreTotals>
 }
 
 export async function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -27,15 +38,13 @@ export async function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
 export async function computeSoa(input: {
   billingStart: string
   billingEnd: string
-  sellerName: string
-  storeName: string
+  dropshippingFee: number
   files: File[]
 }): Promise<ComputeSoaResponse> {
   const body = new FormData()
   body.append('billing_start', input.billingStart)
   body.append('billing_end', input.billingEnd)
-  body.append('seller_name', input.sellerName)
-  body.append('store_name', input.storeName)
+  body.append('dropshipping_fee', String(input.dropshippingFee))
   input.files.forEach((file) => body.append('files[]', file))
 
   const response = await fetch(`${API_URL}/soa/compute`, {

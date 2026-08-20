@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DateRangePickerInputs } from '@/components/ui/DateRangePickerInputs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ROUTES } from '@/constants/routes.constants'
 import { computeSoa } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
@@ -43,10 +45,10 @@ function FileTypeLogo({ name }: { name: string }) {
 
 /** Upload form for Meta order export files. */
 export function OrderExportUploadForm() {
+  const navigate = useNavigate()
   const [billingStart, setBillingStart] = useState('')
   const [billingEnd, setBillingEnd] = useState('')
-  const [sellerName, setSellerName] = useState('')
-  const [storeName, setStoreName] = useState('')
+  const [dropshippingFee, setDropshippingFee] = useState('15')
   const [files, setFiles] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -71,12 +73,21 @@ export function OrderExportUploadForm() {
     setIsSaving(true)
 
     try {
-      await computeSoa({
+      const computed = await computeSoa({
         billingStart,
         billingEnd,
-        sellerName,
-        storeName,
+        dropshippingFee: Number(dropshippingFee),
         files,
+      })
+      navigate(ROUTES.result, {
+        state: {
+          billingStart,
+          billingEnd,
+          net_remittance: computed.net_remittance,
+          total_cogs: computed.total_cogs,
+          total_dsFee: computed.total_dsFee,
+          stores: computed.stores,
+        },
       })
     } finally {
       setIsSaving(false)
@@ -102,25 +113,18 @@ export function OrderExportUploadForm() {
             />
           </fieldset>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="seller-name">Full Name</Label>
-              <Input
-                id="seller-name"
-                value={sellerName}
-                onChange={(event) => setSellerName(event.target.value)}
-                placeholder="Seller full name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="store-name">Store Name</Label>
-              <Input
-                id="store-name"
-                value={storeName}
-                onChange={(event) => setStoreName(event.target.value)}
-                placeholder="Store name"
-              />
-            </div>
+          <div className="w-1/2 space-y-2">
+            <Label htmlFor="dropshipping-fee">Dropshipping Fee</Label>
+            <Input
+              id="dropshipping-fee"
+              type="number"
+              min="0"
+              step="0.01"
+              value={dropshippingFee}
+              onChange={(event) => setDropshippingFee(event.target.value)}
+              placeholder="15"
+              required
+            />
           </div>
 
           <div className="space-y-2">

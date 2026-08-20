@@ -1,0 +1,522 @@
+[
+  {
+    "name": "MACHETE CAPSULE 10S",
+    "aliases": [
+      "MACHETE CAPSULE 10S",
+      "MCTCAPS10",
+      "MCHTCAP10",
+      "MCT-CAPS-10",
+      "MCT-CAPS -10",
+      "MCT-CAPS-10S",
+      "ME-MCTCAPS10",
+      "MACHETE GOLD CAPSULE 10S",
+      "MECHETE CAPSULE 10S",
+      "MACHETTE CAPSULE 10S",
+      "MATCHETE GOLD CAPSULE 10S"
+    ]
+  },
+  
+  {
+    "name": "MACHETE CAPSULE 5S",
+    "aliases": [
+      "MACHETE CAPSULE 5S",
+      "MCTCAPS5",
+      "MCHTCAP5",
+      "MCT-CAPS-5",
+      "MCT-CAPS -5",
+      "MCT-CAPS-5S",
+      "ME-MCTCAPS5",
+      "TRIAL MACHETE",
+      "5S MACHETE CAPSULE",
+      "MATCHETE CAPSULES (5S)"
+    ]
+  },
+  {
+    "name": "MACHETE CAPSULE 2S",
+    "aliases": [
+      "MACHETE CAPSULE 2S",
+      "MCTCAPS2",
+      "MCHTCAP2",
+      "MCT-CAPS-2",
+      "MCT-CAPS-2S"
+    ]
+  },
+  {
+    "name": "MACHETE CAPSULE 20S",
+    "aliases": [
+      "MACHETE CAPSULE 20S",
+      "MACHETE CAPSULE (20S)",
+      "MCHTCAPS 20S",
+      "MATCHETE GOLD CAPSULE 20S"
+    ]
+  },
+  {
+    "name": "MACHETE CAPSULE 30S",
+    "aliases": [
+      "MACHETE CAPSULE 30S",
+      "MACHETE CAPSULE (30S)",
+      "MCHTCAPS-30",
+      "ME-MCTCAPS30",
+      "MCT-CAPS-30S",
+      "MACHETE CAPSULES 30S"
+    ]
+  },
+  {
+    "name": "MACHETE CAPSULE 40S",
+    "aliases": [
+      "MACHETE CAPSULE 40S",
+      "MACHETE CAPSULE (40S)",
+      "ME-MCTCAPS40",
+      "MCHTCAPS40"
+    ]
+  },
+  {
+    "name": "BRUSKO CAPSULE 10S",
+    "aliases": [
+      "BRUSKO CAPSULE 10S",
+      "BRSKCAPS10",
+      "BRSK-CAPS 10",
+      "BRSK-CAPS10",
+      "ME-BRSKCAPS10",
+      "BRUSCO CAPSULE 10S",
+      "BRUSKO CAPSULES 10S",
+      "BRUSKO CAPS 10S",
+      "BRUSKO CAPULE 10S",
+      "BRUCKO CAPSULE 10S"
+    ]
+  },
+  {
+    "name": "BRUSKO CAPSULE 5S",
+    "aliases": [
+      "BRUSKO CAPSULE 5S",
+      "BRSKCAPS5",
+      "BRSK-CAPS 5",
+      "BRSK-CAPS5",
+      "ME-BRSKCAPS5",
+      "TRIAL PACK BRUSKO CAPSULE",
+      "TRIAL BRUSKO CAPSULE",
+      "BRSK CAPSULE 5S",
+      "5S BRUSKO CAPSULE",
+      "BRUSKO CAPSULES (5S)"
+    ]
+  },
+  {
+    "name": "BRUSKO CAPSULE 2S",
+    "aliases": [
+      "BRUSKO CAPSULE 2S",
+      "BRSKCAPS2",
+      "BRSK-CAPS 2",
+      "BRSK-CAPS2",
+      "BRSK-CAPSULE 2S"
+    ]
+  },
+  {
+    "name": "BRUSKO CAPSULE 20S",
+    "aliases": [
+      "BRUSKO CAPSULE 20S",
+      "BRUSKO CAPSULE (20S)",
+      "BRUSKO CAPSULES (20S)",
+      "BRUSKO CAPS 20S"
+    ]
+  },
+  {
+    "name": "BRUSKO CAPSULE 30S",
+    "aliases": [
+      "BRUSKO CAPSULE 30S",
+      "BRUSKO CAPSULE (30S)",
+      "BRSKCAPS30",
+      "ME-BRSKCAPS30",
+      "BRSK-CAPS 30S"
+    ]
+  },
+  {
+    "name": "BRUSKO CAPSULE 40S",
+    "aliases": [
+      "BRUSKO CAPSULE 40S",
+      "BRUSKO CAPSULE (40S)",
+      "BRUSKO CAPSULES (40S)",
+      "BRUSKO CAPSULES 40S"
+    ]
+  },
+  {
+    "name": "TRIAL PACK 5S COFFEE",
+    "aliases": [
+      "TRIAL PACK 5S COFFEE",
+      "TRIAL POUCH BRUSKO COFFEE 5",
+      "BRUSKO COFFEE 5S",
+      "BRSKSACHET5",
+      "BRSK-CF 5S",
+      "BRSK-CFE5",
+      "ME-BRSKSACHET5",
+      "TRIAL PACK BRUSKO COFFEE",
+      "BRUSKO COFFEE TRIAL PACK",
+      "BRUSKO EXTREME COFFEE 5S"
+    ]
+  },
+  {
+    "name": "BOX COFFEE",
+    "aliases": [
+      "BOX COFFEE",
+      "BRUSKO COFFEE 10S",
+      "BRSKPOUCH10",
+      "BRSK-CF 10S",
+      "BRSK-CF10",
+      "POUCH BRUSKO COFFEE",
+      "POUCH BRUSKO",
+      "BRUSKO COFEE 10S",
+      "BRUSKO COFFE 10S",
+      "BRUSCO COFFEE 10S",
+      "BRUSKO COFFEEE 10S",
+      "BRUSKO COFEEE",
+      "BRUSKO EXTREME COFFEE 10S"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 20S",
+    "aliases": [
+      "BRUSKO COFFEE 20S",
+      "BRUSKO COFFEE (20S)",
+      "BRSK-CF20",
+      "BRSK-CF 20S",
+      "BRSK-COFFEE20S",
+      "ME-BRSKPOUCH20",
+      "BRUSKO EXTREME COFFEE 20S"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 30S",
+    "aliases": [
+      "BRUSKO COFFEE 30S",
+      "BRUSKO COFFEE (30S)",
+      "BRSK-CF30",
+      "BRSK-CF 30S",
+      "ME-BRSKPOUCH30",
+      "BRUSKO EXTREME COFFEE 30S",
+      "COFFEE 30S"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 40S",
+    "aliases": [
+      "BRUSKO COFFEE 40S",
+      "BRUSKO COFFEE (40S)",
+      "BRSK-CF40",
+      "BRSK-CF 40S",
+      "ME-BRSKPOUCH40"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 50S",
+    "aliases": [
+      "BRUSKO COFFEE 50S",
+      "BRUSKO COFFEE (50S)"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 60S",
+    "aliases": [
+      "BRUSKO COFFEE 60S",
+      "BRUSKO COFFEE (60S)",
+      "BRUSKO EXTREME COFFEE 60S"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 70S",
+    "aliases": [
+      "BRUSKO COFFEE 70S",
+      "BRUSKO COFFEE (70S)",
+      "BRUSKO COFFEE -70"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 80S",
+    "aliases": [
+      "BRUSKO COFFEE 80S",
+      "BRUSKO COFFEE (80S)",
+      "BRUSKO COFFEE -80"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 90S",
+    "aliases": [
+      "BRUSKO COFFEE 90S",
+      "BRUSKO COFFEE (90S)"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 100S",
+    "aliases": [
+      "BRUSKO COFFEE 100S",
+      "BRUSKO COFFEE (100S)"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE 120S",
+    "aliases": [
+      "BRUSKO COFFEE 120S",
+      "BRUSKO COFFEE (120S)"
+    ]
+  },
+  {
+    "name": "SACHET COFFEE",
+    "aliases": [
+      "SACHET COFFEE",
+      "SACHETS COFFEE",
+      "SACHETS BRUSKO",
+      "SACHET BRUSKO COFFEE",
+      "BRUSKO SACHET"
+    ]
+  },
+  {
+    "name": "AMPALAYA INSULIN COFFEE",
+    "aliases": [
+      "AMPALAYA INSULIN COFFEE",
+      "AMPALAYA"
+    ]
+  },
+  {
+    "name": "PANSITAN TEA 10s",
+    "aliases": [
+      "PANSITAN TEA",
+      "PANSITANTTE",
+      "PANSITANTEA"
+    ]
+  },
+  {
+    "name": "PANSITAL OIL",
+    "aliases": [
+      "PANSITAL OIL",
+      "PANSITAN OIL",
+      "NEW-PNST-30ML",
+      "PNST-30ML",
+      "PANSITAN DROPS",
+      "PNSTN OIL",
+      "PANITAN OIL",
+      "PANSIT PANSITAN RELIEF DROP",
+      "HB-PNSDRPS"
+    ]
+  },
+  {
+    "name": "ALINGATONG OIL",
+    "aliases": [
+      "ALINGATONG OIL",
+      "ALNGTONG-OIL",
+      "ALNGTONG OIL",
+      "RED ALINGATONG",
+      "ALINGAONG OIL",
+      "ALINGATONG MIRACLE OIL"
+    ]
+  },
+  {
+    "name": "MACHETE OIL",
+    "aliases": [
+      "MACHETE OIL",
+      "MACHETE GOLD OIL",
+      "ME-MCT2",
+      "MATCHETE GOLD OIL"
+    ]
+  },
+  {
+    "name": "MANOY OIL",
+    "aliases": [
+      "MANOY OIL"
+    ]
+  },
+  {
+    "name": "DELAY SPRAY",
+    "aliases": [
+      "DELAY SPRAY",
+      "DELAY",
+      "BDLY"
+    ]
+  },
+  {
+    "name": "COCKRING/ 1 FREE CAPSULE",
+    "aliases": [
+      "COCKRING",
+      "COCK RING",
+      "C*CK RING"
+    ]
+  },
+  {
+    "name": "CONDOM/1 FREE CAPSULE",
+    "aliases": [
+      "CONDOM"
+    ]
+  },
+  {
+    "name": "BATO CLEAN HEALING OIL",
+    "aliases": [
+      "BATO CLEAN HEALING OIL",
+      "BATOCLEAN",
+      "FREE 1 BC",
+      "FREE 1BC",
+      "FREE 1- BC",
+      "FREE 1-BC",
+      "FREE 1 -BC",
+      "FREE 2 BC",
+      "FREE 2BC",
+      "FREE BC",
+      "1 FREE BC"
+    ]
+  },
+  {
+    "name": "PANSITAN COFFEE",
+    "aliases": [
+      "PANSITAN COFFEE",
+      "PANSITANCOFFEE",
+      "HB-PANSIT-(COFFEE)",
+      "PANSIT- PANSITAN COFFEE",
+      "PANSIT PANSITAN COFFEE",
+      "PANSIT-PANSITAN COFFEE",
+      "PANSITPANSITAN COFFEE",
+      "PASINTAN COFFEE",
+      "PANSITAN MIRACLE COFFEE"
+    ]
+  },
+  {
+    "name": "ALINGATONG TEA",
+    "aliases": [
+      "ALINGATONG TEA",
+      "ALINGATONGTEA",
+      "ALINGATONG HERBAL TEA",
+      "ALINGATONG MIRACLE TEA",
+      "HT--ALNGTONGTE"
+    ]
+  },
+  {
+    "name": "KINOKI COFFEE",
+    "aliases": [
+      "KINOKI COFFEE",
+      "KINOKI",
+      "ANTIHIGHBLOOD KINOKI"
+    ]
+  },
+  {
+    "name": "NABHYA DHARA",
+    "aliases": [
+      "NABHYA DHARA"
+    ]
+  },
+  {
+    "name": "HIGHBLOOD COFFEE",
+    "aliases": [
+      "HIGHBLOOD COFFEE",
+      "HIGHBLOODCOFFEE",
+      "HB-HIGHBLOOD-(COFFEE)",
+      "HERBAL COFFEE FOR HIGHBLOOD"
+    ]
+  },
+  {
+    "name": "HALAMBUHAY HERBAL COFFEE",
+    "aliases": [
+      "HALAMBUHAY HERBAL COFFEE",
+      "HALAMBUHAY"
+    ]
+  },
+  {
+    "name": "AVOCADO OIL",
+    "aliases": [
+      "AVOCADO OIL",
+      "AVOCADOOIL",
+      "AVOCADO EXTRACT",
+      "NEW-AVCD"
+    ]
+  },
+  {
+    "name": "AVOCADO COFFEE",
+    "aliases": [
+      "AVOCADO COFFEE"
+    ]
+  },
+  {
+    "name": "BRUSKO EXTREME COFFEE",
+    "aliases": [
+      "BRUSKO EXTREME COFFEE",
+      "BRUSKO COFFEE EXTREME"
+    ]
+  },
+  {
+    "name": "ALINGATONG COFFEE",
+    "aliases": [
+      "ALINGATONG COFFEE",
+      "ALINGATONGCOFFEE"
+    ]
+  },
+  {
+    "name": "CLOVES HEALING COFFEE",
+    "aliases": [
+      "CLOVES HEALING COFFEE",
+      "HEALING CLOVES COFFEE"
+    ]
+  },
+  {
+    "name": "PANSITAN HERBAL TEA",
+    "aliases": [
+      "PANSITAN HERBAL TEA",
+      "PANSIT-PANSITAN HERBAL TEA",
+      "PANSIT PANSITAN HERBAL TEA"
+    ]
+  },
+  {
+    "name": "PANSITAN CAPSULE",
+    "aliases": [
+      "PANSITAN CAPSULE"
+    ]
+  },
+  {
+    "name": "BRUSKO OIL",
+    "aliases": [
+      "BRUSKO OIL"
+    ]
+  },
+  {
+    "name": "MANOY WASH",
+    "aliases": [
+      "MANOY WASH"
+    ]
+  },
+  {
+    "name": "BRUSKO CAPSULE",
+    "aliases": [
+      "BRSK-CAPS",
+      "BRSK CPSL",
+      "BRUSKO CAPSULE",
+      "BRUSKO CAPSULES",
+      "FREE 1 PC CAPSULE",
+      "FREE 2PC CAPSULE",
+      "FREE CAPSULE"
+    ]
+  },
+  {
+    "name": "MACHETE CAPSULE",
+    "aliases": [
+      "MACHETE CAPSULE",
+      "MCHETE CAPSULE",
+      "MCHT-1PC",
+      "FREE 2 MACHETE CAPSULE",
+      "FREE 2 PCS MACHETE"
+    ]
+  },
+  {
+    "name": "BRUSKO COFFEE",
+    "aliases": [
+      "BRUSKO COFFEE",
+      "BRUSKO COFEE",
+      "BRUSKO COFFE"
+    ]
+  },
+  {
+    "name": "KNEE PATCH",
+    "aliases": [
+      "KNEE PATCH",
+      "7PATCH",
+      "7 PATCH",
+      "HERBAL PATCH",
+      "MIRACLE PATCH",
+      "GINGER PATCH",
+      "PATCHES",
+      "PATCH"
+    ]
+  }
+]

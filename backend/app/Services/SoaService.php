@@ -25,46 +25,122 @@ class SoaService
         'store_name' => 'Sender Name',
     ];
 
+    private ?array $aliasRows = null;
+
     /**
      * Run the first SOA step: save the run and its order lines.
      *
      * @param  list<UploadedFile>  $files
-     * @return array{soa: SoaRun, cod_transaction: float, cod_commission: float, cod_commission_vat: float, total_shipping_cost: float}
+     * @return array{soa: SoaRun, net_remittance: float, total_cogs: float, total_dsFee: float, stores: array<string, array{store_name: string, net_remittance: float, total_cogs: float, total_dsFee: float}>}
      */
     public function computeSoa(array $meta, array $files): array
     {
         return DB::transaction(function () use ($meta, $files) {
             $soa = $this->saveSoa($meta);
-            $lines = $this->saveOrderLines($soa, $this->readOrderFiles($files));
-            $codTransaction = $this->getCodTransaction($lines);
-            $codCommission = $this->getCodCommission($codTransaction);
-            $codCommissionVat = $this->getCodCommissionVat($codCommission);
-            $totalShippingCost = $this->getTotalShippingCost($lines);
+            $orderLines = $this->saveOrderLines($soa, $this->readOrderFiles($files));
+            $groups = $this->groupByStore($orderLines);
+            $stores = [];
+            $netRemittance = 0.0;
+            $totalCogs = 0.0;
+            $totalDsFee = 0.0;
+
+            foreach ($groups as $storeName => $storeLines) {
+                $totals = $this->computeStoreSoa($storeLines, $meta);
+                $stores[$storeName] = [
+                    'store_name' => $storeName,
+                    'net_remittance' => $totals['net_remittance'],
+                    'total_cogs' => $totals['total_cogs'],
+                    'total_dsFee' => $totals['total_dsFee'],
+                ];
+                $netRemittance += $totals['net_remittance'];
+                $totalCogs += $totals['total_cogs'];
+                $totalDsFee += $totals['total_dsFee'];
+            }
+
+            ksort($stores);
 
             return [
                 'soa' => $soa,
-                'cod_transaction' => $codTransaction,
-                'cod_commission' => $codCommission,
-                'cod_commission_vat' => $codCommissionVat,
-                'total_shipping_cost' => $totalShippingCost,
+                'net_remittance' => round($netRemittance, 2),
+                'total_cogs' => round($totalCogs, 2),
+                'total_dsFee' => round($totalDsFee, 2),
+                'stores' => $stores,
             ];
         });
     }
 
     /**
+     * Group mapped lines by Sender Name.
+     *
+     * @param  list<array<string, mixed>>  $lines
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public function groupByStore(array $lines): array
+    {
+        $stores = [];
+
+        foreach ($lines as $line) {
+            $storeName = trim((string) ($line['store_name'] ?? ''));
+
+            if ($storeName === '') {
+                $storeName = 'Unknown';
+            }
+
+            $stores[$storeName][] = $line;
+        }
+
+        return $stores;
+    }
+
+    /**
+     * Run remittance, COGS, and DS fee for one store's mapped lines.
+     *
+     * @param  list<array<string, mixed>>  $lines
+     * @param  array{billing_start: string, billing_end: string, dropshipping_fee: float|string}  $meta
+     * @return array{net_remittance: float, total_cogs: float, total_dsFee: float}
+     */
+    public function computeStoreSoa(array $lines, array $meta): array
+    {
+        $codTransaction = $this->getCodTransaction(
+            $lines,
+            $meta['billing_start'],
+            $meta['billing_end'],
+        );
+        $codCommission = $this->getCodCommission($codTransaction);
+        $codCommissionVat = $this->getCodCommissionVat($codCommission);
+        $totalShippingCost = $this->getTotalShippingCost($lines);
+        $valuationFee = $this->getValuationFee($codTransaction);
+
+        return [
+            'net_remittance' => round($codTransaction - $codCommission - $codCommissionVat - $totalShippingCost - $valuationFee, 2),
+            'total_cogs' => $this->getTotalCogs(
+                $lines,
+                $meta['billing_start'],
+                $meta['billing_end'],
+            ),
+            'total_dsFee' => $this->getTotalDsFee(
+                $lines,
+                (float) $meta['dropshipping_fee'],
+                $meta['billing_start'],
+                $meta['billing_end'],
+            ),
+        ];
+    }
+
+    /**
      * Save SOA run metadata.
      *
-     * @param  array{billing_start: string, billing_end: string, seller_name: string, store_name: string}  $meta
+     * @param  array{billing_start: string, billing_end: string}  $meta
      */
     public function saveSoa(array $meta): SoaRun
     {
         return SoaRun::query()->create([
             'billing_start' => $meta['billing_start'],
             'billing_end' => $meta['billing_end'],
-            'generated_by' => $meta['seller_name'],
+            'generated_by' => '',
             'timestamp' => now(),
-            'store_name' => $meta['store_name'],
-            'seller_name' => $meta['seller_name'],
+            'store_name' => '',
+            'seller_name' => '',
         ]);
     }
 
@@ -86,62 +162,185 @@ class SoaService
     }
 
     /**
-     * Sum COD once per unique order id.
+     * Sum COD once per unique order delivered during the billing period.
      *
      * @param  list<array<string, mixed>>  $lines
      */
-    public function getCodTransaction(array $lines): float
+    public function getCodTransaction(array $lines, string $billingStart, string $billingEnd): float
     {
         $codByOrder = [];
+        $seen = [];
+        $periodStart = Carbon::parse($billingStart)->startOfDay();
+        $periodEnd = Carbon::parse($billingEnd)->endOfDay();
 
         foreach ($lines as $line) {
             $orderId = $line['order_id'];
 
-            if (! isset($codByOrder[$orderId])) {
-                $codByOrder[$orderId] = (float) $line['cod_amount'];
+            if (isset($seen[$orderId])) {
+                continue;
             }
+
+            $seen[$orderId] = true;
+
+            if ($line['delivered_at'] === null) {
+                continue;
+            }
+
+            $deliveredAt = Carbon::parse($line['delivered_at']);
+
+            if ($deliveredAt->lt($periodStart) || $deliveredAt->gt($periodEnd)) {
+                continue;
+            }
+
+            $codByOrder[$orderId] = (float) $line['cod_amount'];
         }
 
-        return array_sum($codByOrder);
+        return round(array_sum($codByOrder), 2);
     }
 
     /** Compute COD commission as 2.75% of the COD transaction. */
     public function getCodCommission(float $codTransaction): float
     {
-        return $codTransaction * (2.75 / 100);
+        return round($codTransaction * (2.75 / 100), 2);
     }
 
     /** Compute 12% VAT on the COD commission. */
     public function getCodCommissionVat(float $codCommission): float
     {
-        return $codCommission * (12 / 100);
+        return round($codCommission * (12 / 100), 2);
     }
 
     /**
-     * Sum shipping cost from mapped rows, using 65 when the cost is below 65.
+     * Sum shipping once per unique order id, using 65 when the cost is below 65.
      *
      * @param  list<array<string, mixed>>  $lines
      */
     public function getTotalShippingCost(array $lines): float
     {
-        $total = 0.0;
+        $shippingByOrder = [];
 
         foreach ($lines as $line) {
-            $shippingCost = (float) $line['shipping_cost'];
+            $orderId = $line['order_id'];
 
+            if (isset($shippingByOrder[$orderId])) {
+                continue;
+            }
+
+            $shippingCost = (float) $line['shipping_cost'];
             $defaultShippingCost = 65;
 
             if ($shippingCost < $defaultShippingCost) {
                 $shippingCost = $defaultShippingCost;
             }
 
-            $total += $shippingCost;
+            $shippingByOrder[$orderId] = $shippingCost;
         }
 
-        return $total;
-    }   
+        return round(array_sum($shippingByOrder), 2);
+    }
 
+    /** Compute valuation fee as 1% of the COD transaction. */
+    public function getValuationFee(float $codTransaction): float
+    {
+        return round($codTransaction * (1 / 100), 2);
+    }
 
+    /**
+     * Sum qty × COGS rate for mapped lines delivered during the billing period.
+     *
+     * @param  list<array<string, mixed>>  $orders
+     */
+    public function getTotalCogs(array $orders, string $billingStart, string $billingEnd): float
+    {
+        $cogsRows = json_decode((string) file_get_contents(resource_path('json/cogs.json')), true) ?: [];
+        $cogsByName = [];
+        $periodStart = Carbon::parse($billingStart)->startOfDay();
+        $periodEnd = Carbon::parse($billingEnd)->endOfDay();
+
+        foreach ($cogsRows as $row) {
+            $cogsByName[strtoupper((string) $row['name'])] = (float) $row['rate'];
+        }
+
+        $total = 0.0;
+
+        foreach ($orders as $order) {
+            if ($order['delivered_at'] === null) {
+                continue;
+            }
+
+            $deliveredAt = Carbon::parse($order['delivered_at']);
+
+            if ($deliveredAt->lt($periodStart) || $deliveredAt->gt($periodEnd)) {
+                continue;
+            }
+
+            $sku = $this->getSku((string) $order['item_sku']);
+            $rate = $cogsByName[strtoupper($sku)] ?? 0.0;
+            $cogs = ((int) $order['qty']) * $rate;
+            $total += $cogs;
+        }
+
+        return round($total, 2);
+    }
+
+    /** Map an item sku to the catalog name by matching aliases. */
+    private function getSku(string $itemSku): string
+    {
+        if ($this->aliasRows === null) {
+            $this->aliasRows = json_decode((string) file_get_contents(resource_path('json/aliases.json')), true) ?: [];
+        }
+
+        $haystack = strtoupper((string) preg_replace('/[\s\-()]+/', '', $itemSku));
+
+        foreach ($this->aliasRows as $row) {
+            foreach ($row['aliases'] as $alias) {
+                $needle = strtoupper((string) preg_replace('/[\s\-()]+/', '', (string) $alias));
+
+                if ($needle !== '' && str_contains($haystack, $needle)) {
+                    return (string) $row['name'];
+                }
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Sum DS fee once per unique order shipped during the billing period.
+     *
+     * @param  list<array<string, mixed>>  $lines
+     */
+    public function getTotalDsFee(array $lines, float $dsFee, string $billingStart, string $billingEnd): float
+    {
+        $totalDsFee = 0.0;
+        $seen = [];
+        $periodStart = Carbon::parse($billingStart)->startOfDay();
+        $periodEnd = Carbon::parse($billingEnd)->endOfDay();
+
+        foreach ($lines as $line) {
+            $orderId = $line['order_id'];
+
+            if (isset($seen[$orderId])) {
+                continue;
+            }
+
+            $seen[$orderId] = true;
+
+            if ($line['shipped_at'] === null) {
+                continue;
+            }
+
+            $shippedAt = Carbon::parse($line['shipped_at']);
+
+            if ($shippedAt->lt($periodStart) || $shippedAt->gt($periodEnd)) {
+                continue;
+            }
+
+            $totalDsFee += round($dsFee, 2);
+        }
+
+        return round($totalDsFee, 2);
+    }
 
     /**
      * Split each Item Name into initial, upsell, and freebie rows.
