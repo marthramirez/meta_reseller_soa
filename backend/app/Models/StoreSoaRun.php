@@ -6,16 +6,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
-    'billing_start',
-    'billing_end',
-    'generated_by',
-    'total_net_remittance',
+    'soa_id',
+    'store_name',
+    'net_remittance',
     'total_cogs',
     'total_ds_fee',
-    'total_net_pay',
-    'store_count',
+    'net_pay',
 ])]
-class SoaRun extends Model
+class StoreSoaRun extends Model
 {
     /**
      * @return array<string, string>
@@ -23,12 +21,10 @@ class SoaRun extends Model
     protected function casts(): array
     {
         return [
-            'billing_start' => 'date',
-            'billing_end' => 'date',
-            'total_net_remittance' => 'decimal:2',
+            'net_remittance' => 'decimal:2',
             'total_cogs' => 'decimal:2',
             'total_ds_fee' => 'decimal:2',
-            'total_net_pay' => 'decimal:2',
+            'net_pay' => 'decimal:2',
         ];
     }
 }

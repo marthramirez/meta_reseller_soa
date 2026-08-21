@@ -12,6 +12,10 @@ Route::get('/health', function () {
 });
 
 Route::post('/soa/compute', [SoaController::class, 'compute']);
+Route::get('/soa/history', [SoaController::class, 'history']);
+Route::get('/soa/details', [SoaController::class, 'getSoaRunDetails']);
+Route::get('/soa/cogs-lines', [SoaController::class, 'cogsLines']);
+Route::get('/soa/ds-fee-lines', [SoaController::class, 'dsFeeLines']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();

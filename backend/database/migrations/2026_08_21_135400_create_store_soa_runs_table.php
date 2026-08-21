@@ -11,17 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('soa_runs', function (Blueprint $table) {
+        Schema::create('store_soa_runs', function (Blueprint $table) {
             $table->id();
-            $table->date('billing_start');
-            $table->date('billing_end');
-            $table->string('generated_by');
-            $table->decimal('total_net_remittance', 12, 2)->default(0);
+            $table->foreignId('soa_id')->index();
+            $table->string('store_name');
+            $table->decimal('net_remittance', 12, 2)->default(0);
             $table->decimal('total_cogs', 12, 2)->default(0);
             $table->decimal('total_ds_fee', 12, 2)->default(0);
-            $table->decimal('total_net_pay', 12, 2)->default(0);
-            $table->unsignedInteger('store_count')->default(0);
+            $table->decimal('net_pay', 12, 2)->default(0);
             $table->timestamps();
+            $table->unique(['soa_id', 'store_name']);
         });
     }
 
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('soa_runs');
+        Schema::dropIfExists('store_soa_runs');
     }
 };

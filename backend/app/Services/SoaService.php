@@ -2,10 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\CogsLine;
+use App\Models\DsFeeLine;
 use App\Models\OrderLine;
 use App\Models\SoaRun;
+use App\Models\StoreSoaRun;
 use DateTimeInterface;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use OpenSpout\Reader\CSV\Reader as CsvReader;
@@ -31,7 +35,7 @@ class SoaService
      * Run the first SOA step: save the run and its order lines.
      *
      * @param  list<UploadedFile>  $files
-     * @return array{soa: SoaRun, net_remittance: float, total_cogs: float, total_dsFee: float, stores: array<string, array{store_name: string, net_remittance: float, total_cogs: float, total_dsFee: float}>}
+     * @return array{soa: SoaRun, net_remittance: float, total_cogs: float, total_dsFee: float, total_net_pay: float, stores: array<string, array{store_name: string, net_remittance: float, total_cogs: float, total_dsFee: float, net_pay: float}>}
      */
     public function computeSoa(array $meta, array $files): array
     {
@@ -43,27 +47,48 @@ class SoaService
             $netRemittance = 0.0;
             $totalCogs = 0.0;
             $totalDsFee = 0.0;
+            $totalNetPay = 0.0;
+            $cogsLines = [];
+            $dsFeeLines = [];
 
             foreach ($groups as $storeName => $storeLines) {
                 $totals = $this->computeStoreSoa($storeLines, $meta);
+                $netPay = round($totals['net_remittance'] - $totals['total_cogs'] - $totals['total_dsFee'], 2);
                 $stores[$storeName] = [
                     'store_name' => $storeName,
                     'net_remittance' => $totals['net_remittance'],
                     'total_cogs' => $totals['total_cogs'],
                     'total_dsFee' => $totals['total_dsFee'],
+                    'net_pay' => $netPay,
                 ];
                 $netRemittance += $totals['net_remittance'];
                 $totalCogs += $totals['total_cogs'];
                 $totalDsFee += $totals['total_dsFee'];
+                $totalNetPay += $netPay;
+                $cogsLines = array_merge($cogsLines, $totals['cogs_lines']);
+                $dsFeeLines = array_merge($dsFeeLines, $totals['ds_fee_lines']);
             }
 
+            $this->saveCogsLines($cogsLines);
+            $this->saveDsFeeLines($dsFeeLines);
+
             ksort($stores);
+
+            $this->saveStoreSoa($soa->id, $stores);
+            $this->updateSoaRun($soa, [
+                'total_net_remittance' => round($netRemittance, 2),
+                'total_cogs' => round($totalCogs, 2),
+                'total_ds_fee' => round($totalDsFee, 2),
+                'total_net_pay' => round($totalNetPay, 2),
+                'store_count' => count($stores),
+            ]);
 
             return [
                 'soa' => $soa,
                 'net_remittance' => round($netRemittance, 2),
                 'total_cogs' => round($totalCogs, 2),
                 'total_dsFee' => round($totalDsFee, 2),
+                'total_net_pay' => round($totalNetPay, 2),
                 'stores' => $stores,
             ];
         });
@@ -97,7 +122,7 @@ class SoaService
      *
      * @param  list<array<string, mixed>>  $lines
      * @param  array{billing_start: string, billing_end: string, dropshipping_fee: float|string}  $meta
-     * @return array{net_remittance: float, total_cogs: float, total_dsFee: float}
+     * @return array{net_remittance: float, total_cogs: float, total_dsFee: float, cogs_lines: list<array<string, mixed>>, ds_fee_lines: list<array<string, mixed>>}
      */
     public function computeStoreSoa(array $lines, array $meta): array
     {
@@ -110,20 +135,24 @@ class SoaService
         $codCommissionVat = $this->getCodCommissionVat($codCommission);
         $totalShippingCost = $this->getTotalShippingCost($lines);
         $valuationFee = $this->getValuationFee($codTransaction);
+        $cogs = $this->getTotalCogs(
+            $lines,
+            $meta['billing_start'],
+            $meta['billing_end'],
+        );
+        $dsFee = $this->getTotalDsFee(
+            $lines,
+            (float) $meta['dropshipping_fee'],
+            $meta['billing_start'],
+            $meta['billing_end'],
+        );
 
         return [
             'net_remittance' => round($codTransaction - $codCommission - $codCommissionVat - $totalShippingCost - $valuationFee, 2),
-            'total_cogs' => $this->getTotalCogs(
-                $lines,
-                $meta['billing_start'],
-                $meta['billing_end'],
-            ),
-            'total_dsFee' => $this->getTotalDsFee(
-                $lines,
-                (float) $meta['dropshipping_fee'],
-                $meta['billing_start'],
-                $meta['billing_end'],
-            ),
+            'total_cogs' => $cogs['total'],
+            'total_dsFee' => $dsFee['total'],
+            'cogs_lines' => $cogs['lines'],
+            'ds_fee_lines' => $dsFee['lines'],
         ];
     }
 
@@ -137,10 +166,7 @@ class SoaService
         return SoaRun::query()->create([
             'billing_start' => $meta['billing_start'],
             'billing_end' => $meta['billing_end'],
-            'generated_by' => '',
-            'timestamp' => now(),
-            'store_name' => '',
-            'seller_name' => '',
+            'generated_by' => '',    
         ]);
     }
 
@@ -159,6 +185,151 @@ class SoaService
         }
 
         return $lines;
+    }
+
+    /** Bulk insert COGS lines. */
+    public function saveCogsLines(array $lines): void
+    {
+        $now = now()->toDateTimeString();
+
+        foreach (array_chunk($lines, 500) as $chunk) {
+            foreach ($chunk as $index => $line) {
+                $chunk[$index] = $line + ['created_at' => $now, 'updated_at' => $now];
+            }
+
+            CogsLine::query()->insert($chunk);
+        }
+    }
+
+    /** Bulk insert DS fee lines. */
+    public function saveDsFeeLines(array $lines): void
+    {
+        $now = now()->toDateTimeString();
+
+        foreach (array_chunk($lines, 500) as $chunk) {
+            foreach ($chunk as $index => $line) {
+                $chunk[$index] = $line + ['created_at' => $now, 'updated_at' => $now];
+            }
+
+            DsFeeLine::query()->insert($chunk);
+        }
+    }
+
+    /** Bulk insert store SOA totals. */
+    public function saveStoreSoa(int $soaId, array $stores): void
+    {
+        $now = now()->toDateTimeString();
+        $lines = [];
+
+        foreach ($stores as $store) {
+            $lines[] = [
+                'soa_id' => $soaId,
+                'store_name' => $store['store_name'],
+                'net_remittance' => $store['net_remittance'],
+                'total_cogs' => $store['total_cogs'],
+                'total_ds_fee' => $store['total_dsFee'],
+                'net_pay' => $store['net_pay'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        foreach (array_chunk($lines, 500) as $chunk) {
+            StoreSoaRun::query()->insert($chunk);
+        }
+    }
+
+    /** Update an SOA run with computed totals. */
+    public function updateSoaRun(SoaRun $soa, array $totals): void
+    {
+        $soa->update($totals);
+    }
+
+    /** Return all SOA runs, newest first. */
+    public function getSoaHistory(): array
+    {
+        return SoaRun::query()->orderByDesc('id')->get()->all();
+    }
+
+    /**
+     * Return paginated COGS lines for a store, with SKU and dates from order lines.
+     */
+    public function getCogsLines(string $storeName, ?int $soaId = null, int $perPage = 100, int $page = 1): LengthAwarePaginator
+    {
+        $query = CogsLine::query()
+            ->from('cogs_lines')
+            ->select([
+                'cogs_lines.id',
+                'cogs_lines.order_id',
+                'cogs_lines.qty',
+                'cogs_lines.rate',
+                'cogs_lines.total_amount',
+                'order_lines.item_sku',
+                'order_lines.order_status',
+                'order_lines.shipped_at',
+                'order_lines.delivered_at',
+            ])
+            ->where('cogs_lines.store_name', $storeName);
+
+        if ($soaId !== null) {
+            $query->where('cogs_lines.soa_id', $soaId);
+        }
+
+        return $this->joinCogsOrderLines($query)
+            ->orderBy('cogs_lines.id')
+            ->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /** Join COGS lines to matching order lines. */
+    public function joinCogsOrderLines($query)
+    {
+        return $query->join('order_lines', function ($join) {
+            $join->on('cogs_lines.soa_id', '=', 'order_lines.soa_id')
+                ->on('cogs_lines.order_id', '=', 'order_lines.order_id')
+                ->on('cogs_lines.item_sku', '=', 'order_lines.item_sku')
+                ->on('cogs_lines.qty', '=', 'order_lines.qty');
+        });
+    }
+
+    /**
+     * Return paginated DS fee lines for a store, with SKU and dates from order lines.
+     */
+    public function getDsFeeLines(string $storeName, ?int $soaId = null, int $perPage = 100, int $page = 1): LengthAwarePaginator
+    {
+        $query = DsFeeLine::query()
+            ->from('ds_fee_lines')
+            ->select([
+                'ds_fee_lines.id',
+                'ds_fee_lines.order_id',
+                'ds_fee_lines.total_amount',
+                'order_lines.item_sku',
+                'order_lines.order_status',
+                'order_lines.shipped_at',
+                'order_lines.delivered_at',
+            ])
+            ->where('ds_fee_lines.store_name', $storeName);
+
+        if ($soaId !== null) {
+            $query->where('ds_fee_lines.soa_id', $soaId);
+        }
+
+        return $this->joinDsFeeOrderLines($query)
+            ->orderBy('ds_fee_lines.id')
+            ->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /** Join DS fee lines to the first order line of each order. */
+    public function joinDsFeeOrderLines($query)
+    {
+        return $query->join('order_lines', function ($join) {
+            $join->on('ds_fee_lines.soa_id', '=', 'order_lines.soa_id')
+                ->on('ds_fee_lines.order_id', '=', 'order_lines.order_id')
+                ->whereRaw('order_lines.id = (
+                    select min(ol.id) from order_lines as ol
+                    where ol.soa_id = ds_fee_lines.soa_id
+                      and ol.order_id = ds_fee_lines.order_id
+                )');
+        });
     }
 
     /**
@@ -249,8 +420,9 @@ class SoaService
      * Sum qty × COGS rate for mapped lines delivered during the billing period.
      *
      * @param  list<array<string, mixed>>  $orders
+     * @return array{total: float, lines: list<array<string, mixed>>}
      */
-    public function getTotalCogs(array $orders, string $billingStart, string $billingEnd): float
+    public function getTotalCogs(array $orders, string $billingStart, string $billingEnd): array
     {
         $cogsRows = json_decode((string) file_get_contents(resource_path('json/cogs.json')), true) ?: [];
         $cogsByName = [];
@@ -262,6 +434,7 @@ class SoaService
         }
 
         $total = 0.0;
+        $cogsLines = [];
 
         foreach ($orders as $order) {
             if ($order['delivered_at'] === null) {
@@ -276,11 +449,26 @@ class SoaService
 
             $sku = $this->getSku((string) $order['item_sku']);
             $rate = $cogsByName[strtoupper($sku)] ?? 0.0;
-            $cogs = ((int) $order['qty']) * $rate;
+            $qty = (int) $order['qty'];
+            $cogs = $qty * $rate;
             $total += $cogs;
+            $cogsLines[] = [
+                'order_id' => $order['order_id'],
+                'soa_id' => $order['soa_id'],
+                'qty' => $qty,
+                'rate' => round($rate, 2),
+                'total_amount' => round($cogs, 2),
+                'store_name' => $order['store_name'],
+                'item_sku' => $order['item_sku'],
+                'shipped_at' => $order['shipped_at'],
+                'delivered_at' => $order['delivered_at'],
+            ];
         }
 
-        return round($total, 2);
+        return [
+            'total' => round($total, 2),
+            'lines' => $cogsLines,
+        ];
     }
 
     /** Map an item sku to the catalog name by matching aliases. */
@@ -309,13 +497,16 @@ class SoaService
      * Sum DS fee once per unique order shipped during the billing period.
      *
      * @param  list<array<string, mixed>>  $lines
+     * @return array{total: float, lines: list<array<string, mixed>>}
      */
-    public function getTotalDsFee(array $lines, float $dsFee, string $billingStart, string $billingEnd): float
+    public function getTotalDsFee(array $lines, float $dsFee, string $billingStart, string $billingEnd): array
     {
         $totalDsFee = 0.0;
+        $dsFeeLines = [];
         $seen = [];
         $periodStart = Carbon::parse($billingStart)->startOfDay();
         $periodEnd = Carbon::parse($billingEnd)->endOfDay();
+        $amount = round($dsFee, 2);
 
         foreach ($lines as $line) {
             $orderId = $line['order_id'];
@@ -336,10 +527,22 @@ class SoaService
                 continue;
             }
 
-            $totalDsFee += round($dsFee, 2);
+            $totalDsFee += $amount;
+            $dsFeeLines[] = [
+                'order_id' => $orderId,
+                'soa_id' => $line['soa_id'],
+                'total_amount' => $amount,
+                'store_name' => $line['store_name'],
+                'item_sku' => $line['item_sku'],
+                'shipped_at' => $line['shipped_at'],
+                'delivered_at' => $line['delivered_at'],
+            ];
         }
 
-        return round($totalDsFee, 2);
+        return [
+            'total' => round($totalDsFee, 2),
+            'lines' => $dsFeeLines,
+        ];
     }
 
     /**
